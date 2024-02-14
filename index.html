@@ -28,7 +28,15 @@
   		.copy {
   			display: none;
   		}
+  		.corrected p {
+  			margin: 2px 0;
+  		}
   	</style>
+  	<input type="radio" name='type_instruction' id='binary'>
+  	<label for="binary">Binary</label>
+  	<input type="radio" name='type_instruction' id='hex'>
+  	<label for="hex">Hex</label>
+  	<br><br>
     <input class="initial" type="text">
     <button class="submit">Or press Enter</button>
     <p class="corrected">
@@ -40,6 +48,8 @@
     <p>
     	Paste your instruction with any spacing and it will convert to correct spacing and copy to your clipboard. You can also paste more than one instruction, it will convert all of them (as far as they are real instructions).
     </p>
+    <input type="checkbox" class='select' id='name' name='select'>
+    <label for="select">Select full text on click on input</label>
 	<script src="index.js"></script>
   </body>
 </html>
