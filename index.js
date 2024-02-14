@@ -158,9 +158,7 @@ function converter(init) {
     } else if (op == '11') {
       instruction = op3_inst[op3] + tab + rs1_i + comma + '[' + simm13_i + ']' + comma + rd_i;
     }
-    if (op3_inst[op3] == 'st') {
-      instruction = op3_inst[op3] + tab + rd_i + comma + '[' + simm13_i + ']';
-    } else if (op3_inst[op3] == 'ld') {
+    if (op3_inst[op3] == 'st' || op3_inst[op3] == 'ld') {
       instruction = op3_inst[op3] + tab + rd_i + comma + '[' + simm13_i + ']';
     }
   }
