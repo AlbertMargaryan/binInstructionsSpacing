@@ -31,13 +31,21 @@
   		.corrected p {
   			margin: 2px 0;
   		}
+      .instructions {
+        display: none;
+        width: 280px;
+        box-sizing: border-box;
+      }
   	</style>
   	<input type="radio" name='type_instruction' id='binary' checked>
   	<label for="binary">Binary</label>
   	<input type="radio" name='type_instruction' id='hex'>
   	<label for="hex">Hex</label>
+    <input type="radio" name='type_instruction' id='instruction'>
+    <label for="instruction">Instruction</label>
   	<br><br>
     <input class="initial" type="text">
+    <textarea name="instructions" class="instructions" cols="30" rows="10"></textarea>
     <button class="submit">Or press Enter</button>
     <p class="corrected">
     	

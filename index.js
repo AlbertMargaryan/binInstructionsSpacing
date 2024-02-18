@@ -15,6 +15,19 @@ document.querySelector(".submit").addEventListener("click", (e) => {
   convertToRight()
 })
 
+document.querySelectorAll('input[name="type_instruction"]').forEach((e) => {
+  e.addEventListener('click', (ev) => {
+    if (ev.target.id === 'instruction') {
+      document.querySelector('.initial').style.display = 'none';
+      document.querySelector('.instructions').style.display = 'inline';
+    }
+    else {
+      document.querySelector('.initial').style.display = 'inline';
+      document.querySelector('.instructions').style.display = 'none';
+    }
+  })
+})
+
 function getAndNormalize() {
   let instruction = document.querySelector(".initial").value.replace(/\s/g, "");
 
@@ -24,6 +37,11 @@ function getAndNormalize() {
 function convertToRight() {
   let init = getAndNormalize();
   let selectedRadio = document.querySelector('input[name="type_instruction"]:checked');
+
+  if (selectedRadio.id === 'instruction') {
+    convertInstruction();
+    return 0;
+  }
 
   if (selectedRadio.id === 'hex' && init.length == 8) {
     init = parseInt(init, 16).toString(2).padStart(32, '0');
@@ -74,6 +92,116 @@ function convertToRight() {
 
     document.querySelector('.corrected').innerHTML = finalBinary + '<br>' + finalInstructions;
   }
+}
+
+function convertInstruction() {
+  const textarea = document.querySelector('.instructions');
+  const lines = textarea.value.split('\n');
+  let linesArray = lines.map(line => line.split(' '));
+
+    // Filter out elements starting with "."
+  linesArray = linesArray.filter(arr => !arr[0].startsWith("."));
+
+  // Filter out elements of the form ["name:", "number/hex"]
+  linesArray = linesArray.filter(arr => !arr[1] || isNaN(parseInt(arr[1]) && arr[0].charAt(-1) === ':'));
+  
+  linesArray.forEach(arr => {
+    if (arr[0].includes(":")) {
+        arr.shift(); // Remove the first element
+    }
+  });
+
+  const op2_inst = {
+    'branch': '010',
+    'sethi': '100'
+  };
+
+  const op3_inst = {
+    'addcc': '010000',
+    'andcc': '010001',
+    'orcc': '010010',
+    'orncc': '010110',
+    'srl': '100110',
+    'jmpl': '111000',
+    'subcc': '010100',
+  };
+
+  const op3_memo = {
+    'ld': '000000',
+    'st': '000100'
+  }
+
+  const br_inst = {
+    'be': '0001',
+    'bcs': '0101',
+    'bneg': '0110',
+    'bvs': '0111',
+    'ba': '1000',
+  };
+  console.log(linesArray)
+  let arrayOfResults = [];
+  linesArray.forEach((e) => {
+    let result = ''
+    if (op3_inst[e[0]]) {
+      if (e[0] === 'jmpl') {
+        if (e[1] === '%r15+4,' && e[2] === '%r0') {
+          result = '10000001110000111110000000000100'
+          arrayOfResults.push(result);
+        }
+      }
+      else {
+        let op1 = '10'
+        let rd = parseInt(e[3].substring(2)).toString(2).padStart(5, '0');
+        let op3 = op3_inst[e[0]];
+        let rs1 = parseInt(e[1].substring(2)).toString(2).padStart(5, '0');
+        let rs2simm = e[2].includes('%') ? parseInt(e[2].substring(2)).toString(2).padStart(14, '0') : '1' + parseInt(e[2].substring(1, e[2].length - 1)).toString(2).padStart(parseInt(13, 2), '0');
+        result = op1+rd+op3+rs1+rs2simm;
+        arrayOfResults.push(result)
+      }
+    }
+    else if (op3_memo[e[0]]){
+      let op1 = '11'
+      let op3 = op3_memo[e[0]];
+      let rs1 = '00000'
+      let rd;
+      let rs2simm;
+      if (e[0] === 'ld') {
+        rd = parseInt(e[2].substring(2)).toString(2).padStart(5, '0');
+        rs2simm = e[1].includes('%') ? parseInt(e[1].substring(2)).toString(2).padStart(14, '0') : '1' + parseInt(e[1].substring(1, e[1].length - 1)).toString(2).padStart(13, '0');
+      }
+      else if(e[0] === 'st') {
+        rd = parseInt(e[1].substring(2)).toString(2).padStart(5, '0');
+        rs2simm = e[2].includes('%') ? parseInt(e[2].substring(2)).toString(2).padStart(14, '0') : '1' + parseInt(e[2].substring(1, e[2].length - 1)).toString(2).padStart(13, '0');
+      }
+      result = op1+rd+op3+rs1+rs2simm;
+      arrayOfResults.push(result)
+    }
+    else if(br_inst[e[0]] || e[0] === 'sethi') {
+      let op1 = '00';
+      if (e[0] === 'sethi') {
+        let op2 = '100'
+        let rd;
+      }
+      else {
+        let cond = '0' + br_inst[e[0]];
+        let op2 = '010';
+        let disp22 = parseInt(e[1].substring(1, e[1].length - 1)).toString(2).padStart(22, '0');
+        let result = op1 + cond + op2 + disp22;
+        arrayOfResults.push(result)
+      }
+    }
+    else {
+      console.log('We doesnt support this function')
+    }
+  })
+  let finalBinary = "";
+  for (let i = 0; i < arrayOfResults.length; i++){
+    finalBinary += `<p>${linesArray[i].join(" ")}: ${arrayOfResults[i]}</p>`;
+  }
+    arrayOfResults.forEach((element) => {
+        
+    });
+  document.querySelector('.corrected').innerHTML = finalBinary;
 }
 
 function converter(init) {
@@ -148,7 +276,7 @@ function converter(init) {
       instruction = op3_inst[op3] + tab + rd_i + comma + rs2_i;
     }
     else if (op3_inst[op3] == 'ld') {
-      instruction = op3_inst[op3] + tab + rd_i + comma + rs2_i;
+      instruction = op3_inst[op3] + tab + rs2_i + comma + rd_i;
     }
   }
   else if ((op == '10' || op == '11') && i == 1) {
@@ -158,8 +286,10 @@ function converter(init) {
     } else if (op == '11') {
       instruction = op3_inst[op3] + tab + rs1_i + comma + '[' + simm13_i + ']' + comma + rd_i;
     }
-    if (op3_inst[op3] == 'st' || op3_inst[op3] == 'ld') {
+    if (op3_inst[op3] == 'st') {
       instruction = op3_inst[op3] + tab + rd_i + comma + '[' + simm13_i + ']';
+    } else if (op3_inst[op3] == 'ld') {
+      instruction = op3_inst[op3] + space + '[' + simm13_i + ']' + comma + rd_i;
     }
   }
   return [result, instruction];
