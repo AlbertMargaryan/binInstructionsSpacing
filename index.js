@@ -181,6 +181,7 @@ function convertInstruction() {
       if (e[0] === 'sethi') {
         let op2 = '100'
         let rd;
+        arrayOfResults.push('N/A')
       }
       else {
         let cond = '0' + br_inst[e[0]];
@@ -191,6 +192,7 @@ function convertInstruction() {
       }
     }
     else {
+      arrayOfResults.push('N/A')
       console.log('We doesnt support this function')
     }
   })
